@@ -50,6 +50,7 @@ export class Settings {
   readonly ENABLE_COMMAND_VALIDATION: boolean;
   readonly WHITELIST_ENABLED: boolean;
   readonly ORFS_FLOW_PATH: string;
+  readonly DOCKER_PULL_TIMEOUT_MS: number;
 
   constructor(overrides: Partial<Settings> = {}) {
     this.COMMAND_TIMEOUT = overrides.COMMAND_TIMEOUT ?? 30.0;
@@ -65,6 +66,9 @@ export class Settings {
     this.ENABLE_COMMAND_VALIDATION = overrides.ENABLE_COMMAND_VALIDATION ?? true;
     this.WHITELIST_ENABLED = overrides.WHITELIST_ENABLED ?? true;
     this.ORFS_FLOW_PATH = overrides.ORFS_FLOW_PATH ?? path.join(os.homedir(), "OpenROAD-flow-scripts", "flow");
+    // 20 minutes: openroad/orfs images are multi-GB, a short default would
+    // false-negative on a normal pull over a slow connection.
+    this.DOCKER_PULL_TIMEOUT_MS = overrides.DOCKER_PULL_TIMEOUT_MS ?? 1_200_000;
   }
 
   get flowPath(): string {
@@ -107,6 +111,7 @@ export class Settings {
       ["MAX_SESSIONS", "OPENROAD_MAX_SESSIONS", false],
       ["SESSION_QUEUE_SIZE", "OPENROAD_SESSION_QUEUE_SIZE", false],
       ["READ_CHUNK_SIZE", "OPENROAD_READ_CHUNK_SIZE", false],
+      ["DOCKER_PULL_TIMEOUT_MS", "DOCKER_PULL_TIMEOUT_MS", false],
     ];
     const strFields: Array<[keyof Settings, string]> = [
       ["LOG_LEVEL", "LOG_LEVEL"],

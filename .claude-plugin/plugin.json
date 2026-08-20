@@ -1,0 +1,16 @@
+{
+  "name": "openroad-mcp",
+  "displayName": "OpenROAD MCP",
+  "version": "1.0.0",
+  "description": "Interactive OpenROAD/ORFS sessions via MCP, with a skill to run them in Docker",
+  "author": {
+    "name": "The OpenROAD Project",
+    "url": "https://github.com/The-OpenROAD-Project"
+  },
+  "homepage": "https://github.com/The-OpenROAD-Project/openroad-mcp",
+  "repository": "https://github.com/The-OpenROAD-Project/openroad-mcp",
+  "license": "BSD-3-Clause",
+  "keywords": ["eda", "mcp", "openroad", "orfs", "docker"],
+  "mcpServers": "./mcp-config.json",
+  "skills": "./skills/"
+}

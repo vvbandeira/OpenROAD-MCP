@@ -18,6 +18,8 @@ const EXPECTED_TOOLS = [
   "get_session_metrics",
   "list_report_images",
   "read_report_image",
+  "pull_orfs_docker_image",
+  "create_docker_orfs_session",
 ].sort();
 
 /** Minimal manager stub: listing tools needs no calls; one round-trip uses listSessions. */
@@ -37,7 +39,7 @@ async function connectClient(manager: OpenROADManager): Promise<Client> {
 }
 
 describe("createMcpServer over MCP", () => {
-  it("enumerates exactly the 10 expected tools", async () => {
+  it("enumerates exactly the 12 expected tools", async () => {
     const client = await connectClient(makeMockManager());
     const { tools } = await client.listTools();
 

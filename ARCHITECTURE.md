@@ -1,7 +1,7 @@
 # OpenROAD MCP Server — Architecture
 
 The server is written in TypeScript and distributed via npm as `openroad-mcp`. It implements the
-Model Context Protocol over stdio (default) or Streamable HTTP, exposing 10 tools to AI clients.
+Model Context Protocol over stdio (default) or Streamable HTTP, exposing 12 tools to AI clients.
 
 ---
 
@@ -10,7 +10,7 @@ Model Context Protocol over stdio (default) or Streamable HTTP, exposing 10 tool
 ```
 typescript/src/
 ├── main.ts                    # Entry point; reads CLI args, starts transport
-├── server.ts                  # Registers all 10 MCP tools; HTTP request handler
+├── server.ts                  # Registers all 12 MCP tools; HTTP request handler
 ├── exceptions.ts              # Shared exception classes (SessionError, PTYError, …)
 ├── constants.ts               # Shared constants (MAX_COMMAND_HISTORY, timeouts, …)
 │
@@ -33,7 +33,8 @@ typescript/src/
 │   ├── base.ts                # BaseTool: toSnakeCase serialisation, formatResult
 │   ├── index.ts               # Re-exports all tool classes
 │   ├── interactive.ts         # QueryShellTool, ExecShellTool, session management tools
-│   └── report_images.ts       # ListReportImagesTool, ReadReportImageTool, path security
+│   ├── report_images.ts       # ListReportImagesTool, ReadReportImageTool, path security
+│   └── docker_orfs.ts         # PullOrfsImageTool, CreateDockerOrfsSessionTool
 │
 └── utils/
     ├── ansi_decoder.ts        # Strips ANSI escape sequences from PTY output

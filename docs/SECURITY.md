@@ -14,6 +14,7 @@ This document describes the security boundaries, access controls, and known expo
 - [PTY Spawn Allowlist](#pty-spawn-allowlist)
 - [Environment Variable Reference](#environment-variable-reference)
 - [Report Image Path Containment](#report-image-path-containment)
+- [Docker-backed Sessions](#docker-backed-sessions)
 - [HTTP Transport Exposure](#http-transport-exposure)
 - [Exec is Not a Sandbox](#exec-is-not-a-sandbox)
 
@@ -164,6 +165,7 @@ All variables are read at startup by [`typescript/src/config/settings.ts`](../ty
 | `OPENROAD_ENABLE_COMMAND_VALIDATION` | bool | `true` | Enables/disables `PtyHandler.validateCommand` |
 | `OPENROAD_WHITELIST_ENABLED` | bool | `true` | Enables/disables the Tcl command whitelist |
 | `ORFS_FLOW_PATH` | path | `~/OpenROAD-flow-scripts/flow` | Root for ORFS reports; tilde-expanded at runtime |
+| `DOCKER_PULL_TIMEOUT_MS` | integer (ms) | `1200000` (20 min) | Timeout for `pull_orfs_docker_image`; override per-call with `timeout_ms` |
 | `LOG_LEVEL` | string | `INFO` | Root pino logger level (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) |
 | `LOG_FORMAT` | string | (N/A) | Unused; logging uses pino with a fixed JSON format |
 
@@ -213,6 +215,32 @@ Images are classified by filename stem: the `stage` is the prefix before the fir
 Recognised stems: `cts_clk`, `cts_clk_layout`, `cts_core_clock`, `cts_core_clock_layout`,
 `final_all`, `final_clocks`, `final_congestion`, `final_ir_drop`, `final_placement`,
 `final_resizer`, `final_routing`.
+
+---
+
+## Docker-backed Sessions
+
+`create_docker_orfs_session` (see [docs/API.md](API.md#create_docker_orfs_session)) spawns
+`docker run ...` through the same `PtyHandler` as every other session — it does not introduce a
+separate execution path or its own sandbox.
+
+- **`docker` must be explicitly allowlisted.** It is not in the default
+  `OPENROAD_ALLOWED_COMMANDS` (`openroad` only); set
+  `OPENROAD_ALLOWED_COMMANDS=openroad,docker` to enable this tool.
+- **The assembled `docker run` argv passes through the same PTY spawn arg validation** as any
+  other command: no shell metacharacters, no redirection operators, no `..` path traversal (see
+  [PTY Spawn Allowlist](#pty-spawn-allowlist) above). The tool itself additionally validates the
+  image reference against a narrow allowlist pattern and requires `flow_dir` to be an existing
+  absolute directory before it is used in a `-v` mount.
+- **This changes the trust boundary, not the sandbox model.** Once `docker` is allowlisted, the
+  Docker daemon and everything it can do (image pulls, bind mounts, container escape via a
+  misconfigured or compromised image) becomes part of what a session can reach — the same "exec is
+  not a sandbox" caveat below applies, just one layer further out. By default the container is
+  started with `--network none`; pass `network: true` only if you understand that it removes this
+  isolation.
+- **`pull_orfs_docker_image`** runs `docker pull` directly via `child_process.spawn`, not through
+  the PTY/whitelist machinery (it is a one-shot admin operation, not an OpenROAD session). It
+  validates the image reference the same way before spawning.
 
 ---
 

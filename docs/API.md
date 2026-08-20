@@ -30,6 +30,9 @@ make golden
 - [Report Image Tools](#report-image-tools)
   - [list_report_images](#list_report_images)
   - [read_report_image](#read_report_image)
+- [Docker-backed Session Tools](#docker-backed-session-tools)
+  - [pull_orfs_docker_image](#pull_orfs_docker_image)
+  - [create_docker_orfs_session](#create_docker_orfs_session)
 - [Session Lifecycle Notes](#session-lifecycle-notes)
 
 ---
@@ -520,6 +523,73 @@ when the original exceeded 15 KB (base64).
   "error": "ImageNotFound"
 }
 ```
+
+---
+
+## Docker-backed Session Tools
+
+These let you run OpenROAD inside the official `openroad/orfs` Docker image instead of a local
+`openroad` binary — useful when OpenROAD/ORFS isn't installed on the host. See the
+[docker-orfs skill](../skills/docker-orfs/SKILL.md) for the end-to-end workflow, and
+[SECURITY.md](SECURITY.md#docker-backed-sessions) for the trust-boundary implications.
+
+### `pull_orfs_docker_image`
+
+Pull the `openroad/orfs` image via `docker pull`. Not session-based — a plain one-shot operation.
+Can take several minutes on first pull (the image is multiple gigabytes).
+
+| Parameter | Type | Required | Default |
+|-----------|------|----------|---------|
+| `image` | string | no | `openroad/orfs:26Q1-534-g510137693` (pinned to this server's `Makefile`) |
+| `timeout_ms` | integer | no | `1200000` (20 min, `DOCKER_PULL_TIMEOUT_MS`) |
+
+**Annotations:**
+- `readOnlyHint: false`
+- `destructiveHint: true`
+- `idempotentHint: true`
+- `openWorldHint: true`
+
+**Response shape:**
+
+```json
+{
+  "image": "openroad/orfs:26Q1-534-g510137693",
+  "pulled": true,
+  "duration_seconds": 42.1,
+  "output": "...docker pull output (tail, bounded to 32 KiB)...",
+  "error": null
+}
+```
+
+### `create_docker_orfs_session`
+
+Create an interactive OpenROAD session backed by a Docker container instead of a local process.
+Builds a vetted `docker run` command from the parameters below and hands it to the same session
+machinery `create_interactive_session` uses — the returned `session_id` works with every other
+`interactive_*`/session tool unchanged.
+
+| Parameter | Type | Required | Default |
+|-----------|------|----------|---------|
+| `session_id` | string | no | random 8-char hex ID |
+| `image` | string | no | `openroad/orfs:26Q1-534-g510137693` |
+| `flow_dir` | string | no | `ORFS_FLOW_PATH` (must be an existing absolute directory) |
+| `container_flow_path` | string | no | `/OpenROAD-flow-scripts/flow` |
+| `command` | string[] | no | `["openroad", "-no_init"]` |
+| `env` | object | no | none |
+| `network` | boolean | no | `false` (container runs with `--network none`) |
+
+`flow_dir` is bind-mounted read-write at `container_flow_path` so ORFS reports and run outputs
+land back on the host at the same path `list_report_images`/`read_report_image` already read from.
+Requires `docker` to be included in `OPENROAD_ALLOWED_COMMANDS`.
+
+**Annotations:**
+- `readOnlyHint: false`
+- `destructiveHint: false`
+- `idempotentHint: false`
+- `openWorldHint: false`
+
+**Response shape:** identical to `create_interactive_session`'s
+`interactive_session_info_success.json` (see above).
 
 ---
 

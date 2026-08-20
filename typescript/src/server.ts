@@ -21,6 +21,7 @@ import {
   TerminateSessionTool,
 } from "./tools/interactive.js";
 import { ListReportImagesTool, ReadReportImageTool } from "./tools/report_images.js";
+import { CreateDockerOrfsSessionTool, PullOrfsImageTool } from "./tools/docker_orfs.js";
 
 const logger = getLogger("server");
 
@@ -39,7 +40,7 @@ function text(value: string): { content: [{ type: "text"; text: string }] } {
 }
 
 /**
- * Build an McpServer with all 10 tools registered. Accepts an optional manager
+ * Build an McpServer with all 12 tools registered. Accepts an optional manager
  * so tests can inject an isolated/mocked one; defaults to the module singleton.
  *
  * Tool names, descriptions, input params, and annotations mirror the Python
@@ -58,6 +59,8 @@ export function createMcpServer(manager: OpenROADManager = defaultManager): McpS
   const sessionMetricsTool = new SessionMetricsTool(manager);
   const listReportImagesTool = new ListReportImagesTool(manager);
   const readReportImageTool = new ReadReportImageTool(manager);
+  const pullOrfsImageTool = new PullOrfsImageTool(manager);
+  const createDockerOrfsSessionTool = new CreateDockerOrfsSessionTool(manager);
 
   mcp.registerTool(
     "interactive_openroad_query",
@@ -252,6 +255,69 @@ export function createMcpServer(manager: OpenROADManager = defaultManager): McpS
           args.design,
           args.run_slug,
           args.image_name,
+        ),
+      ),
+  );
+
+  mcp.registerTool(
+    "pull_orfs_docker_image",
+    {
+      description:
+        "Pull the openroad/orfs Docker image (default tag pinned to this server's release) so " +
+        "create_docker_orfs_session has an image to run. This can take several minutes on first pull " +
+        "since the image is multiple gigabytes. Requires the docker CLI on PATH and a reachable " +
+        "Docker daemon.",
+      inputSchema: {
+        image: z.string().optional(),
+        timeout_ms: z.number().int().optional(),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async (args) => text(await pullOrfsImageTool.execute(args.image, args.timeout_ms)),
+  );
+
+  mcp.registerTool(
+    "create_docker_orfs_session",
+    {
+      description:
+        "Create a new interactive OpenROAD session backed by a Docker container running the " +
+        "openroad/orfs image, instead of a local openroad binary. Use this when OpenROAD/ORFS is " +
+        "not installed on the host. Builds a vetted `docker run` command from the given parameters " +
+        "and mounts flow_dir (default: this server's ORFS_FLOW_PATH) into the container so ORFS " +
+        "reports and run outputs land back on the host. Requires 'docker' to be included in " +
+        "OPENROAD_ALLOWED_COMMANDS. The returned session works with every other interactive_* tool " +
+        "exactly like create_interactive_session's sessions.",
+      inputSchema: {
+        session_id: z.string().optional(),
+        image: z.string().optional(),
+        flow_dir: z.string().optional(),
+        container_flow_path: z.string().optional(),
+        command: z.array(z.string()).optional(),
+        env: z.record(z.string(), z.string()).optional(),
+        network: z.boolean().optional(),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    },
+    async (args) =>
+      text(
+        await createDockerOrfsSessionTool.execute(
+          args.session_id,
+          args.image,
+          args.flow_dir,
+          args.container_flow_path,
+          args.command,
+          args.env,
+          args.network,
         ),
       ),
   );

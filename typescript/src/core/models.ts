@@ -195,3 +195,14 @@ export const ReadImageResult = z.object({
   error: errorField,
 });
 export type ReadImageResult = z.infer<typeof ReadImageResult>;
+
+// Docker/ORFS models
+
+export const DockerPullResult = z.object({
+  image: z.string(),
+  pulled: z.boolean().default(false),
+  durationSeconds: z.number().default(0),
+  output: z.string().default(""),
+  error: errorField,
+});
+export type DockerPullResult = z.infer<typeof DockerPullResult>;

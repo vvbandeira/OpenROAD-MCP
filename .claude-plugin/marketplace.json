@@ -1,0 +1,15 @@
+{
+  "name": "openroad-plugins",
+  "owner": {
+    "name": "The OpenROAD Project",
+    "url": "https://github.com/The-OpenROAD-Project"
+  },
+  "description": "Official OpenROAD plugins for Claude Code",
+  "plugins": [
+    {
+      "name": "openroad-mcp",
+      "source": "./",
+      "description": "Interactive OpenROAD/ORFS sessions via MCP, with a skill to run them in Docker"
+    }
+  ]
+}

@@ -39,6 +39,14 @@ To use this MCP server, you need the server runtime, plus the underlying OpenROA
 **ORFS** is optional but highly recommended for complete RTL-to-GDS flows and report visualization.
 - [Official ORFS Local Build Guide](https://openroad-flow-scripts.readthedocs.io/en/latest/user/BuildLocally.html)
 
+### Alternative: Docker (no local OpenROAD/ORFS install)
+
+Don't want to build OpenROAD locally? `pull_orfs_docker_image` and `create_docker_orfs_session`
+run OpenROAD inside the official `openroad/orfs` Docker image instead — you only need Docker and
+Node.js. Set `OPENROAD_ALLOWED_COMMANDS=openroad,docker` and see the
+[docker-orfs skill](skills/docker-orfs/SKILL.md) for the full workflow, or install the
+[Claude Code Plugin](#claude-code-plugin) below, which enables this out of the box.
+
 ## Configuration
 
 For platform-specific Node.js and C++ toolchain setup instructions, see the **[Cross-Platform Build Guide](docs/CROSS_PLATFORM.md)**.
@@ -180,6 +188,23 @@ Once configured, your AI assistant will have access to the following tools. For 
 - `get_session_metrics`
 - `list_report_images`
 - `read_report_image`
+- `pull_orfs_docker_image`
+- `create_docker_orfs_session`
+
+## Claude Code Plugin
+
+Install the MCP server and the [docker-orfs skill](skills/docker-orfs/SKILL.md) together in one
+step:
+
+```
+/plugin marketplace add the-openroad-project/openroad-mcp
+/plugin install openroad-mcp@openroad-plugins
+```
+
+This registers the server (`npx -y openroad-mcp`) with `OPENROAD_ALLOWED_COMMANDS=openroad,docker`
+set by default, so `create_docker_orfs_session` works immediately — no local OpenROAD/ORFS install
+needed. Ask Claude to "run OpenROAD in Docker" or "pull the openroad/orfs image" to trigger the
+skill, or invoke it directly with `/openroad-mcp:docker-orfs`.
 
 ## Troubleshooting
 
@@ -187,6 +212,8 @@ Once configured, your AI assistant will have access to the following tools. For 
 - **Session creation fails**: Confirm `openroad` is on your `PATH`. The server spawns it by name; if it's missing, session creation (not startup) will fail.
 - **Commands rejected with CommandBlocked**: You sent a state-modifying command to `interactive_openroad_query`. Use `interactive_openroad_exec` instead.
 - **Report images not found**: Make sure `ORFS_FLOW_PATH` points to your ORFS `flow/` directory.
+- **`create_docker_orfs_session` fails with `CommandBlocked`/not-allowed**: Set
+  `OPENROAD_ALLOWED_COMMANDS=openroad,docker` — `docker` isn't allowlisted by default.
 
 To get more detail, set `LOG_LEVEL=DEBUG` in the server's environment.
 

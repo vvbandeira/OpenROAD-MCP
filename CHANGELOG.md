@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `pull_orfs_docker_image` and `create_docker_orfs_session` tools to run OpenROAD inside the
+  official `openroad/orfs` Docker image, for users without a local OpenROAD/ORFS install.
+- Claude Code Plugin packaging (`.claude-plugin/`) bundling the MCP server config with a new
+  `docker-orfs` skill, installable via `/plugin install openroad-mcp@openroad-plugins`.
+
 ## [1.0.0] - 2026-08-11
 
 ### Changed

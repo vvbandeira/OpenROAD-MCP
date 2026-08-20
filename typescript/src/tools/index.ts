@@ -11,3 +11,4 @@ export {
   TerminateSessionTool,
 } from "./interactive.js";
 export { ListReportImagesTool, ReadReportImageTool, classifyImageType, validatePlatformDesign } from "./report_images.js";
+export { PullOrfsImageTool, CreateDockerOrfsSessionTool, DEFAULT_ORFS_IMAGE } from "./docker_orfs.js";

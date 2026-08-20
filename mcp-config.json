@@ -1,0 +1,9 @@
+{
+  "openroad-mcp": {
+    "command": "npx",
+    "args": ["-y", "openroad-mcp"],
+    "env": {
+      "OPENROAD_ALLOWED_COMMANDS": "openroad,docker"
+    }
+  }
+}
